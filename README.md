@@ -170,3 +170,38 @@ To obtain initial password for Jenkins web UI:
 ----------------------------------------------
 docker exec -it jenkins-server cat /var/jenkins_home/secrets/initialAdminPassword  
 
+ADDITIONAL INFORMATION ON GITHUB:
+================================
+Creating your github repository:
+================================
+#Test SSH connection to github from your Linux CLI using this command
+ssh -T git@github.com
+- If you get the below response back, your ssh connection is ok, otherwise...
+- Hi Yourname! You've successfully authenticated, but GitHub does not provide shell access.
+
+#Back to github
+#From your github account, click the "+" icon in the top right corner of the page
+#then select  "New repository" from the dropdown menu and fill out Repository info.
+#Do not initialise README or add any .gitignore or license files on, as these will
+#be created locally from your terminal.
+
+#Now, the fun part, go to your terminal and start running these commands
+echo "echo "# yourfile" >> README.md (This create READ.md file needed)
+git init
+git add README.md
+git commit -m "Initial commit"(You can change message in double quote, if you want)
+
+#NOTE: After running the last command (git commit -m...) above, you might a message, if you, run the these commands
+git config --global user.email "your_email@whatever.com" (email used to open github)
+git config --global user.email "your_github_profile_name"
+
+#Now, continue...
+git branch -m main
+git remote add origin git@github.com:profile_name/repository_name.git
+git push -u origin main
+NOTE: If you get a complain 'fatal: Authentication failed for 'https://github.com/...' run the below commands instead. The 'warning' is related to 'SSH' authentication [you might have configured between your git account and your host machine].
+
+#OR use these…
+git branch -m main
+git remote set-url origin git@github.com:profile_name/repository_name.git
+git push -u origin main
