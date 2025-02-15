@@ -1,0 +1,46 @@
+#!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
+
+# Check if docker compose is installed
+if ! command -v docker compose &> /dev/null; then
+  echo "Error: docker compose is not installed."
+  exit 1
+fi
+
+# Get the container ID of the agent1 container
+CONTAINER_ID=$(docker ps -qf "name=jenkins-agent1-1")
+if [ -z "$CONTAINER_ID" ]; then
+  echo "Error: jenkins-agent1-1 container not found."
+  exit 1
+fi
+
+echo "Container ID: $CONTAINER_ID"
+
+# Copy the public key to the agent container
+
+if ! docker cp ~/.ssh/agent1.pub "${CONTAINER_ID}:/tmp/agent1.pub"; then
+  echo "Error: Failed to copy agent1.pub to container."
+  exit 1
+fi
+echo "Successfully copied agent1.pub to container"
+
+# Configure SSH access
+if ! docker exec -it "${CONTAINER_ID}" bash -c 'mkdir -p /home/jenkins/.ssh && \
+ touch /home/jenkins/.ssh/authorized_keys && \
+ cat /tmp/agent1.pub >> /home/jenkins/.ssh/authorized_keys && \
+ chown -R jenkins:jenkins /home/jenkins/.ssh && \
+ chmod 700 /home/jenkins/.ssh && \
+ chmod 600 /home/jenkins/.ssh/authorized_keys'; then
+  echo "Error: Failed to configure SSH access."
+  exit 1
+fi
+echo "Successfully configured SSH access"
+
+# Remove the temporary copy of the public key
+if ! docker exec "${CONTAINER_ID}" rm /tmp/agent1.pub; then
+  echo "Error: Failed to remove /tmp/agent1.pub from container."
+  exit 1
+fi
+echo "Successfully removed /tmp/agent1.pub from container"
+
+echo "Agent SSH key setup completed successfully."

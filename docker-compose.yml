@@ -62,6 +62,7 @@ services:
     restart: always
     volumes:
       - agent1_data:/home/jenkins/agent
+      - agent1_ssh:/home/jenkins/.ssh # new service!
     depends_on:
       - jenkins-server
 
@@ -74,3 +75,4 @@ volumes:
   jenkins-data:
   agent1_data:
   jenkins-known-hosts: # Declare new volume here.
+  agent1_ssh:

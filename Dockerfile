@@ -16,5 +16,10 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
 # Run update and install packages
 RUN apt-get update && apt-get install -y docker-ce-cli
 
+# Ensure the .ssh directory exists and has the correct ownership BEFORE copying anything
+RUN mkdir -p /var/jenkins_home/.ssh && \
+    chown -R jenkins:jenkins /var/jenkins_home/.ssh && \
+    chmod 700 /var/jenkins_home/.ssh
+
 # Set-up Jenkins user
 USER jenkins
