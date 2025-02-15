@@ -136,6 +136,15 @@ When you run docker-compose up -d, Docker Compose will start the containers in t
 Docker Compose will wait for the jenkins-docker container to become healthy (healthcheck passes) before starting jenkins-server.
 
 Docker Compose will wait for jenkins-server to become healthy before starting agent1.
+
+Persist the Jenkins known_hosts File (Recommended):
+===================================================
+The best approach is to persist the Jenkins known_hosts file, which stores the SSH host keys of trusted hosts. By persisting this file, Jenkins will remember the host key of the agent container even when the container is recreated.
+
+Explanation:
+jenkins-known-hosts:/var/jenkins_home/.ssh/known_hosts: This line mounts a new named volume, jenkins-known-hosts, to the /var/jenkins_home/.ssh/known_hosts path inside the jenkins-server container.
+
+jenkins-known-hosts:: This adds a new volume declaration to the list of declared volumes. This may not be required as compose v3 will create the volume if it doesn't exist, but it is a good practice.
 -------------------------------------------------------------------------------------
 
 ADDITIONAL COMMANDS

@@ -35,6 +35,8 @@ services:
     volumes:
       - jenkins-data:/var/jenkins_home
       - jenkins-docker-certs:/certs/client:ro
+      # Mount the known_hosts file:
+      - jenkins-known-hosts:/var/jenkins_home/.ssh/known_hosts
     ports:
       - "8080:8080"
       - "50000:50000"
@@ -71,3 +73,4 @@ volumes:
   jenkins-docker-certs:
   jenkins-data:
   agent1_data:
+  jenkins-known-hosts: # Declare new volume here.
