@@ -13,74 +13,65 @@ services:
     ports:
       - "2376:2376"
     networks:
-      jenkins:
-        aliases:
-          - jenkins-docker
-          - docker
+      - jenkins-network
     command: --storage-driver overlay2
     healthcheck:
       test: ["CMD-SHELL", "docker info || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s  # Increased to allow dind to initialize
 
   jenkins-server:
     build: .  # Build the image from the Dockerfile in the current directory
     container_name: jenkins-server
     restart: on-failure
     environment:
-      #- DOCKER_HOST=tcp://docker:2376 #Commented-out to use next line to allow server/agent connect...
       - DOCKER_HOST=tcp://jenkins-docker:2376
       - DOCKER_CERT_PATH=/certs/client
       - DOCKER_TLS_VERIFY=1
     volumes:
       - jenkins-data:/var/jenkins_home
       - jenkins-docker-certs:/certs/client:ro
-      # Mount the known_hosts file:
-      - jenkins-known-hosts:/var/jenkins_home/.ssh/known_hosts
     ports:
       - "8080:8080"
       - "50000:50000"
     networks:
-      jenkins:
-        aliases:
-          - jenkins-server
+      - jenkins-network
     depends_on:
-      - jenkins-docker
+      jenkins-docker:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/login || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s  # Allow Jenkins to initialize
 
-  agent1:
-    image: jenkins/ssh-agent:alpine-jdk17
-    ports:
-      - "22:22"
+  jenkins-docker-agent:
+    image: jenkins/inbound-agent:latest-jdk17
     networks:
-      - jenkins
+      - jenkins-network
     restart: always
     volumes:
-      - agent1_data:/home/jenkins/agent
-      - agent1_ssh:/home/jenkins/.ssh # new service!
-      # Mount Docker socket to allow Docker commands inside the agent container:
+      - docker-agent_data:/home/jenkins/agent
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - JENKINS_URL=http://jenkins-server:8080
+      - JENKINS_SECRET=7d3e6ab58a62a36de3dd16d591cf21dd605f53f03b5a4b01ae2814c0fb928c6f  ##Check the secret code
+      - JENKINS_AGENT_NAME=jenkins-docker-agent
     user: root
     privileged: true
     depends_on:
-      - jenkins-server
+      jenkins-server:
+        condition: service_healthy
 
 networks:
-  jenkins:
+  jenkins-network:
     driver: bridge
 
 volumes:
   jenkins-docker-certs:
   jenkins-data:
-  agent1_data:
-  jenkins-known-hosts: # Declare new volume here.
-  agent1_ssh:
+  docker-agent_data:
