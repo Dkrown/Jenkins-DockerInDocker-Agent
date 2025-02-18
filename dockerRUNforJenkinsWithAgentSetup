@@ -1,0 +1,44 @@
+docker run -d \
+--name jenkins-controller \
+-p 8080:8080 -p 5000:5000 \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v $(which docker):/usr/bin/docker \
+-v jenkins_home:/var/jenkins_home \
+-u root \
+-e DOCKER_GID=$(getent group docker | cut -d: -f3) \
+--network jenkins-network 
+jenkins/jenkins:lts
+
+Jenkins web UI agent node environment variables settings:
+---------------------------------------------------------
+Environment variables:
+JENKINS_AGENT_NAME
+docker-agent
+
+JENKINS_URL
+http://jenkins-controller:8080
+
+JENKINS_SECRET
+secret value
+-------------
+Docker-agent:
+docker run -d \
+--name jenkins-agent \
+--network jenkins-network \
+-e JENKINS_AGENT_NAME=docker-agent \
+-e JENKINS_URL=http://jenkins-controller:8080 \
+-e JENKINS_SECRET=secret value \
+-u root \
+Jenkins/inbound-agent
+--------------------------
+curl -sO http://jenkins-controller:8080/jnlpJars/agent.jar
+java -jar agent.jar -url http://jenkins-controller:8080/ -secret 7d3e6ab58a62a36de3dd16d591cf21dd605f53f03b5a4b01ae2814c0fb928c6f -name "jenkins-docker-agent" -webSocket -workDir "/home/jenkins/agent"
+---------------------------------------------------------
+
+Connect agent and Verify connection:
+docker exec -it docker-agent bash
+copy and run 'run from agent command line' commands from Jenkins web UI
+apt update
+apt install iputils-ping -y
+exit
+docker exec -it docker-agent ping -c4 jenkins-controller
